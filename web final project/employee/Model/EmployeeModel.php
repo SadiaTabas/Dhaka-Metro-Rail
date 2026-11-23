@@ -58,10 +58,12 @@ function getAllSchedules() {
     return $conn->query($sql);
 }
 
-function getAllRoutes() {
-    global $conn;
-    if (!$conn) return false;
-    return $conn->query("SELECT * FROM routes ORDER BY RouteID ASC");
+if (!function_exists('getAllRoutes')) {
+    function getAllRoutes() {
+        global $conn;
+        if (!$conn) return false;
+        return $conn->query("SELECT * FROM routes ORDER BY RouteID ASC");
+    }
 }
 
 function addSchedule($trainName, $routeId, $depTime, $arrTime) {

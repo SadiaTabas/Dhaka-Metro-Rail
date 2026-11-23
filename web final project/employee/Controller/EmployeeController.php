@@ -1,5 +1,10 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    if (!@is_writable(session_save_path())) {
+        @session_save_path(sys_get_temp_dir());
+    }
+    session_start();
+}
 include "../Model/EmployeeModel.php";
 
 if (!isset($_SESSION['UserID']) || $_SESSION['RoleID'] != 2) {
