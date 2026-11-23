@@ -7,6 +7,10 @@
   },
   "routes": [
     {
+      "src": "/(dashboard\\.css|dashboard\\.js|dashboard1\\.jpg|signuplogo\\.png|style\\.css|script\\.js)",
+      "dest": "/passenger/view/$1"
+    },
+    {
       "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot))$",
       "dest": "/$1"
     },

@@ -1,23 +1,29 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    if (!@is_writable(session_save_path())) {
+        @session_save_path(sys_get_temp_dir());
+    }
     session_start();
 }
 
 $error = $_SESSION['error'] ?? '';
 unset($_SESSION['error']);
 
-// If passenger is already logged in, seamlessly forward them to their authenticated dashboard
+// If passenger is already logged in, forward to authenticated dashboard
 if (isset($_SESSION['UserID']) && ($_SESSION['RoleID'] ?? 0) == 3) {
-    $target = (strpos($_SERVER['PHP_SELF'] ?? '', '/passenger/view/') !== false) ? 'dashboard_after_login.php' : 'passenger/view/dashboard_after_login.php';
+    $reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $target = (strpos($reqPath, '/passenger/view/') !== false) ? 'dashboard_after_login.php' : 'passenger/view/dashboard_after_login.php';
     header("Location: $target");
     exit();
 }
 
-$inPassengerView = (strpos($_SERVER['PHP_SELF'] ?? '', '/passenger/view/') !== false) || (strpos($_SERVER['REQUEST_URI'] ?? '', '/passenger/view/') !== false);
-$formAction = $inPassengerView ? '../controller/SaveJourneyTemp.php' : 'passenger/controller/SaveJourneyTemp.php';
-$imgSrc = $inPassengerView ? 'dashboard1.jpg' : 'passenger/view/dashboard1.jpg';
-$jsSrc = $inPassengerView ? 'dashboard.js' : 'passenger/view/dashboard.js';
-$cssSrc = $inPassengerView ? 'dashboard.css' : 'passenger/view/dashboard.css';
+$reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$isRootRequest = ($reqPath === '/' || $reqPath === '/index.php' || empty(trim($reqPath, '/')));
+
+$formAction   = $isRootRequest ? 'passenger/controller/SaveJourneyTemp.php' : '../controller/SaveJourneyTemp.php';
+$imgSrc       = $isRootRequest ? 'passenger/view/dashboard1.jpg' : 'dashboard1.jpg';
+$jsSrc        = $isRootRequest ? 'passenger/view/dashboard.js' : 'dashboard.js';
+$cssSrc       = $isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css';
 
 $stations = [
     "Uttara North", "Uttara Center", "Uttara South", "Pallabi",

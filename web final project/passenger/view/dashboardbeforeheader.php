@@ -1,11 +1,12 @@
 <?php
-// Context-aware paths for navigation
-$inPassengerView = (strpos($_SERVER['PHP_SELF'] ?? '', '/passenger/view/') !== false) || (strpos($_SERVER['REQUEST_URI'] ?? '', '/passenger/view/') !== false);
-$homeLink     = $inPassengerView ? 'dashboard.php' : './';
-$registerLink = $inPassengerView ? 'signup.php' : 'passenger/view/signup.php';
-$loginLink    = $inPassengerView ? '../../employee/View/php/login.php' : 'employee/View/php/login.php';
-$logoSrc      = $inPassengerView ? 'signuplogo.png' : 'passenger/view/signuplogo.png';
-$cssPath      = $inPassengerView ? 'dashboard.css' : 'passenger/view/dashboard.css';
+$reqPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$isRootRequest = ($reqPath === '/' || $reqPath === '/index.php' || empty(trim($reqPath, '/')));
+
+$homeLink     = $isRootRequest ? '/' : 'dashboard.php';
+$registerLink = $isRootRequest ? 'passenger/view/signup.php' : 'signup.php';
+$loginLink    = $isRootRequest ? 'employee/View/php/login.php' : '../../employee/View/php/login.php';
+$logoSrc      = $isRootRequest ? 'passenger/view/signuplogo.png' : 'signuplogo.png';
+$cssPath      = $isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css';
 ?>
 <link rel="stylesheet" href="<?php echo $cssPath; ?>">
 <header class="header">
