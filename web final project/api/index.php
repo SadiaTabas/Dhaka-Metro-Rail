@@ -8,6 +8,15 @@ $path = trim($parsedPath, '/');
 // Base directory is the application root
 $baseDir = dirname(__DIR__);
 
+// Ensure session save path is writable across all environments (Vercel Lambda /tmp, Windows %TEMP%)
+$currentSavePath = session_save_path();
+if (empty($currentSavePath) || !@is_writable($currentSavePath)) {
+    $tempDir = sys_get_temp_dir();
+    if (@is_writable($tempDir)) {
+        @session_save_path($tempDir);
+    }
+}
+
 // Handle Static Assets
 $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 $staticExts = ['css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'ico', 'webp', 'woff', 'woff2', 'ttf', 'eot'];
