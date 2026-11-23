@@ -1,37 +1,26 @@
 function validateForm() {
+    let fullNameInput = document.getElementById("full_name") || (document.forms["profileForm"] && document.forms["profileForm"]["full_name"]);
+    let dobInput = document.getElementById("dob") || (document.forms["profileForm"] && document.forms["profileForm"]["dob"]);
+    let genderInput = document.getElementById("gender") || (document.forms["profileForm"] && document.forms["profileForm"]["gender"]);
 
-    let fullName = document.forms["profileForm"]["full_name"].value.trim();
-    let dob = document.forms["profileForm"]["dob"].value;
-    let gender = document.forms["profileForm"]["gender"].value;
+    let fullName = fullNameInput ? fullNameInput.value.trim() : "";
+    let dob = dobInput ? dobInput.value : "";
+    let gender = genderInput ? genderInput.value : "";
 
-
-    if (fullName == "") {
+    if (!fullName) {
         alert("Full Name must be filled out");
         return false;
     }
 
-    if (!/^[a-zA-Z ]+$/.test(fullName)) {
-        alert("Full Name can only contain letters and spaces");
-        return false;
-    }
-
-
-    if (dob == "") {
+    if (!dob) {
         alert("Date of Birth must be selected");
         return false;
     }
 
-
-    if (gender == "") {
+    if (!gender) {
         alert("Please select a Gender");
         return false;
     }
 
-
     return true;
-}
-
-
-function cancelForm() {
-    window.location.href = "dashboard.php";
 }

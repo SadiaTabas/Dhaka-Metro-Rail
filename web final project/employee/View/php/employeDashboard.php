@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Authentication check
 if (!isset($_SESSION['UserID']) || $_SESSION['RoleID'] != 2) {
     header("Location: login.php");
     exit();
@@ -9,58 +8,113 @@ if (!isset($_SESSION['UserID']) || $_SESSION['RoleID'] != 2) {
 
 include "../../Model/EmployeeModel.php";
 
- 
-$passengers = getAllPassengers();
-$transactions = getAllTransactions();
- 
 $userID = (int)$_SESSION['UserID'];
-$resName = mysqli_query($conn, "SELECT FirstName, LastName FROM users WHERE UserID = $userID");
-$empName = "";
-if ($row = mysqli_fetch_assoc($resName)) {
-    $empName = htmlspecialchars($row['FirstName'] . " " . $row['LastName']);
-} else {
-    $empName = htmlspecialchars($_SESSION['Mobile']);  
+$empName = $_SESSION['UserName'] ?? "Staff";
+
+if ($conn) {
+    $resName = mysqli_query($conn, "SELECT FirstName, LastName FROM users WHERE UserID = $userID");
+    if ($resName && $row = mysqli_fetch_assoc($resName)) {
+        $empName = trim($row['FirstName'] . " " . $row['LastName']);
+        $_SESSION['UserName'] = $empName;
+    }
+}
+
+// Live statistics
+$totalPassengers = 0;
+$activeCards = 0;
+$blockedCards = 0;
+$totalTransactions = 0;
+
+if ($conn) {
+    $pRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3");
+    if ($pRes && $row = mysqli_fetch_assoc($pRes)) $totalPassengers = (int)$row['cnt'];
+
+    $actRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND (Status = 'Active' OR Status IS NULL)");
+    if ($actRes && $row = mysqli_fetch_assoc($actRes)) $activeCards = (int)$row['cnt'];
+
+    $blkRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND Status = 'Blocked'");
+    if ($blkRes && $row = mysqli_fetch_assoc($blkRes)) $blockedCards = (int)$row['cnt'];
+
+    $txRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM transactions");
+    if ($txRes && $row = mysqli_fetch_assoc($txRes)) $totalTransactions = (int)$row['cnt'];
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Dashboard - Dhaka Metro</title>
-
- 
+    <title>Employee Operations - Dhaka Metro Rail</title>
     <link rel="stylesheet" href="../css/employDashboard.css">
+    <link rel="stylesheet" href="../../../passenger/view/dashboard.css">
 </head>
-
 <body>
-   
-    <?php require_once('../../../admin/view/employeeheader.php'); ?>
 
-    <div class="dashboard-container">
-        <h2>Employee Dashboard</h2>
-        <p class="welcome-text">Welcome, <?php echo $empName; ?> (Staff)</p>
+<?php require_once('../../../admin/view/employeeheader.php'); ?>
 
-        
-
-        <div style="display: flex; gap: 20px; margin-top: 30px;">
-            <div class="dashboard-section" style="flex: 1; text-align: center; padding: 40px 20px;">
-                <h3 style="border: none; margin-bottom: 10px;">💳 Passenger Management</h3>
-                <p style="color: #555; margin-bottom: 20px;">Block or unblock passenger cards.</p>
-                <a href="unblockCard.php" class="btn-add" style="text-decoration: none; display: inline-block;">Go to Passengers</a>
-            </div>
-
-            <div class="dashboard-section" style="flex: 1; text-align: center; padding: 40px 20px;">
-                <h3 style="border: none; margin-bottom: 10px;">💰 Payments & Transactions</h3>
-                <p style="color: #555; margin-bottom: 20px;">Verify payments and view transaction history.</p>
-                <a href="paymentHandling.php" class="btn-add" style="text-decoration: none; display: inline-block;">Go to Payments</a>
-            </div>
+<main class="main-content">
+    <div class="user-welcome-bar">
+        <div class="welcome-left">
+            <h2>Employee Operations Portal</h2>
+            <p>Welcome back, <strong><?= htmlspecialchars($empName) ?></strong> (Staff ID #<?= $userID ?>)</p>
         </div>
-
+        <div class="welcome-right">
+            <span class="status-badge status-confirmed">System Operational</span>
+        </div>
     </div>
 
- 
-    <?php require_once('footer.php'); ?>
+    <?php if (isset($_GET['msg'])): ?>
+        <?php if ($_GET['msg'] === 'status_updated'): ?>
+            <div class="alert-box success-alert">Passenger account status updated successfully.</div>
+        <?php elseif ($_GET['msg'] === 'password_updated'): ?>
+            <div class="alert-box success-alert">Your password has been updated successfully.</div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <div class="info-cards-container">
+        <div class="info-card">
+            <div class="info-icon">👥</div>
+            <h3>Total Passengers</h3>
+            <p class="stat-highlight" style="font-size:24px; font-weight:800; color:#006a4e; margin:6px 0;"><?= $totalPassengers ?></p>
+            <small>Registered Accounts</small>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">💳</div>
+            <h3>Active Transit Cards</h3>
+            <p class="stat-highlight" style="font-size:24px; font-weight:800; color:#15803d; margin:6px 0;"><?= $activeCards ?></p>
+            <small>Cleared for travel</small>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">🚫</div>
+            <h3>Blocked Cards</h3>
+            <p class="stat-highlight" style="font-size:24px; font-weight:800; color:#dc2626; margin:6px 0;"><?= $blockedCards ?></p>
+            <small>Suspended or flagged</small>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">📊</div>
+            <h3>Total Transactions</h3>
+            <p class="stat-highlight" style="font-size:24px; font-weight:800; color:#1d75f0; margin:6px 0;"><?= $totalTransactions ?></p>
+            <small>Payments & Top-ups</small>
+        </div>
+    </div>
+
+    <div class="quick-nav-grid" style="margin-top: 30px;">
+        <div class="quick-nav-card" style="text-align: left;">
+            <div class="card-icon">💳</div>
+            <h3>Passenger Card Management</h3>
+            <p style="margin-bottom: 18px;">Inspect passenger transit accounts, verify identification, and block or unblock cards.</p>
+            <a href="unblockCard.php" class="btn-top-action" style="display:inline-block;">Open Card Manager</a>
+        </div>
+
+        <div class="quick-nav-card" style="text-align: left;">
+            <div class="card-icon">💰</div>
+            <h3>Payments & Transactions</h3>
+            <p style="margin-bottom: 18px;">Verify ticket booking validity by Ticket ID and inspect station transaction history.</p>
+            <a href="paymentHandling.php" class="btn-top-action" style="display:inline-block;">Inspect Payments</a>
+        </div>
+    </div>
+</main>
+
+<?php require_once('footer.php'); ?>
 </body>
 </html>

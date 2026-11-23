@@ -7,35 +7,34 @@ if (!isset($_SESSION['UserID'], $_SESSION['RoleID'])) {
     exit();
 }
 
-$userId = $_SESSION['UserID'];
-$roleID = $_SESSION['RoleID'];
+$userId = (int)$_SESSION['UserID'];
+$roleID = (int)$_SESSION['RoleID'];
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
     $fullName = trim($_POST['full_name'] ?? '');
-    $dob      = $_POST['dob'] ?? '';
-    $gender   = $_POST['gender'] ?? '';
+    $dob      = trim($_POST['dob'] ?? '');
+    $gender   = trim($_POST['gender'] ?? '');
 
     if ($fullName === '') {
         header("Location: ../view/Profile_Information.php?msg=empty");
         exit();
     }
 
-    // Split full name into first and last
-    $parts = explode(" ", $fullName);
+    $parts = explode(" ", $fullName, 2);
     $firstName = $parts[0];
-    $lastName = isset($parts[1]) ? $parts[1] : '';
+    $lastName  = $parts[1] ?? '';
 
     $updateResult = updateUserProfile($userId, $firstName, $lastName, $dob, $gender);
 
     if ($updateResult) {
-        // ROLE WISE REDIRECT
-        if ($roleID == 1) {
-            header("Location: ../view/admindashboard.php");
-        } elseif ($roleID == 3) {
-            header("Location: ../../passenger/view/dashboard_after_login.php");
-        } elseif ($roleID == 2) {
-            header("Location: ../../employee/View/php/employeDashboard.php");
+        $_SESSION['UserName'] = $fullName;
+        if ($roleID === 1) {
+            header("Location: ../view/admindashboard.php?msg=profile_updated");
+        } elseif ($roleID === 2) {
+            header("Location: ../../employee/View/php/employeDashboard.php?msg=profile_updated");
+        } elseif ($roleID === 3) {
+            header("Location: ../../passenger/view/dashboard_after_login.php?msg=profile_updated");
         } else {
             header("Location: ../../employee/View/php/login.php");
         }
@@ -45,4 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         exit();
     }
 }
+
+header("Location: ../view/Profile_Information.php");
+exit();
 ?>

@@ -1,45 +1,53 @@
 <?php
+session_start();
 include "../model/UserModel.php";
 
-$fullname = trim($_POST['fullname']);
-$mobile   = trim($_POST['mobile']);
-$nid      = trim($_POST['nid']);
-$dob      = $_POST['dob'];
-$gender   = $_POST['gender'];
-$password = $_POST['password'];
-$confirm  = $_POST['confirm_password'];
+$fullname = trim($_POST['fullname'] ?? '');
+$mobile   = trim($_POST['mobile'] ?? '');
+$nid      = trim($_POST['nid'] ?? '');
+$dob      = trim($_POST['dob'] ?? '');
+$gender   = trim($_POST['gender'] ?? '');
+$password = $_POST['password'] ?? '';
+$confirm  = $_POST['confirm_password'] ?? '';
 
- 
 if (
     empty($fullname) || empty($mobile) || empty($nid) ||
     empty($dob) || empty($gender) ||
     empty($password) || empty($confirm)
 ) {
-    die("All fields are required");
+    $_SESSION['signup_error'] = "All fields are required.";
+    header("Location: ../view/signup.php");
+    exit();
 }
 
-if (!is_numeric($mobile) || strlen($mobile) != 11) {
-    die("Mobile must be 11 digits");
+if (!preg_match('/^01[3-9]\d{8}$/', $mobile)) {
+    $_SESSION['signup_error'] = "Mobile must be a valid 11-digit Bangladeshi number (01XXXXXXXXX).";
+    header("Location: ../view/signup.php");
+    exit();
 }
 
-if (!is_numeric($nid) || strlen($nid) != 13) {
-    die("NID must be 13 digits");
+if (!is_numeric($nid) || strlen($nid) < 10) {
+    $_SESSION['signup_error'] = "NID must be a valid number of at least 10 digits.";
+    header("Location: ../view/signup.php");
+    exit();
 }
 
 if ($password !== $confirm) {
-    die("Passwords do not match");
+    $_SESSION['signup_error'] = "Passwords do not match.";
+    header("Location: ../view/signup.php");
+    exit();
 }
 
 if (strlen($password) < 6) {
-    die("Password must be at least 6 characters");
+    $_SESSION['signup_error'] = "Password must be at least 6 characters.";
+    header("Location: ../view/signup.php");
+    exit();
 }
 
- 
 $name = explode(" ", $fullname, 2);
 $firstName = $name[0];
 $lastName  = $name[1] ?? "";
 
- 
 $result = createUser(
     $firstName,
     $lastName,
@@ -50,11 +58,17 @@ $result = createUser(
     $password
 );
 
-if ($result) {
-    header("Location: /employee/View/php/login.php");
+if ($result === "exists") {
+    $_SESSION['signup_error'] = "An account with this mobile number already exists.";
+    header("Location: ../view/signup.php");
+    exit();
+} elseif ($result === true) {
+    $_SESSION['signup_success'] = "Account created successfully! Please login.";
+    header("Location: ../../employee/View/php/login.php?msg=registered");
     exit();
 } else {
-    echo "Signup failed";
+    $_SESSION['signup_error'] = "Registration failed. Please check database connection.";
+    header("Location: ../view/signup.php");
+    exit();
 }
-
 ?>

@@ -9,24 +9,27 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
     if ($from === "" || $to === "" || $date === "") {
         $_SESSION['error'] = "All fields are required!";
-        header("Location:passenger/view/dashboard.php");
+        header("Location: ../view/dashboard.php");
         exit();
     }
 
     if ($from === $to) {
-        $_SESSION['error'] = "From and To cannot be same!";
-        header("Location:passenger/view/dashboard.php");
+        $_SESSION['error'] = "From and To stations cannot be the same!";
+        header("Location: ../view/dashboard.php");
         exit();
     }
 
-    // ✅ SAVE GUEST DATA
+    // Save journey in session for after login
     $_SESSION['temp_journey'] = [
         'from' => $from,
         'to' => $to,
         'journey_date' => $date
     ];
 
-    // Redirect to login
-    header("Location: /employee/View/php/login.php");
+    header("Location: ../../employee/View/php/login.php?redirect=journey");
+    exit();
+} else {
+    header("Location: ../view/dashboard.php");
     exit();
 }
+?>

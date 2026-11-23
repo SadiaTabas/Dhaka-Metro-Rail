@@ -1,83 +1,116 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['error']);
+
+// If passenger is already logged in, seamlessly forward them to their authenticated dashboard
+if (isset($_SESSION['UserID']) && ($_SESSION['RoleID'] ?? 0) == 3) {
+    $target = (strpos($_SERVER['PHP_SELF'] ?? '', '/passenger/view/') !== false) ? 'dashboard_after_login.php' : 'passenger/view/dashboard_after_login.php';
+    header("Location: $target");
+    exit();
+}
+
+$inPassengerView = (strpos($_SERVER['PHP_SELF'] ?? '', '/passenger/view/') !== false) || (strpos($_SERVER['REQUEST_URI'] ?? '', '/passenger/view/') !== false);
+$formAction = $inPassengerView ? '../controller/SaveJourneyTemp.php' : 'passenger/controller/SaveJourneyTemp.php';
+$imgSrc = $inPassengerView ? 'dashboard1.jpg' : 'passenger/view/dashboard1.jpg';
+$jsSrc = $inPassengerView ? 'dashboard.js' : 'passenger/view/dashboard.js';
+$cssSrc = $inPassengerView ? 'dashboard.css' : 'passenger/view/dashboard.css';
+
+$stations = [
+    "Uttara North", "Uttara Center", "Uttara South", "Pallabi",
+    "Mirpur-11", "Mirpur-10", "Kazipara", "Shewrapara",
+    "Agargaon", "Bijoy Sarani", "Farmgate", "Karwan Bazar",
+    "Shahbagh", "Dhaka University", "Secretariat", "Motijheel", "Kamalapur"
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dhaka Metro</title>
-    <link rel="stylesheet" href="dashboard.css">
-     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhaka Metro Rail - Fast, Safe & Green Urban Transit</title>
+    <link rel="stylesheet" href="<?php echo $cssSrc; ?>">
 </head>
 <body>
 
- <?php include "dashboardbeforeheader.php"; ?>
- 
- 
- 
-<div class="dashboard-box">
- 
- 
-    <div class="form-side">
-        <h2>Book Your Journey</h2>
+<?php include __DIR__ . "/dashboardbeforeheader.php"; ?>
 
-        <form method="post" action="../controller/SaveJourneyTemp.php">
-
-
-    <label>From</label>
-    <select name="from" id="from">
-        <option value="">Select From Station</option>
-         
-    <option value="Uttara North"  >Uttara North</option>
-    <option value="Agargaon"  >Agargaon</option>
-    <option value="Motijheel"  >Motijheel</option>
-    </select>
-
-    <label>To</label>
-    <select name="to" id="to">
-       <option value="Uttara Center"  >Uttara Center</option>
-    <option value="Uttara South"  >Uttara South</option>
-    <option value="Pallabi"  >Pallabi</option>
-    <option value="Mirpur-11"  >Mirpur-11</option>
-    <option value="Mirpur-10"  >Mirpur-10</option>
-    <option value="Kazipara"  >Kazipara</option>
-    <option value="Shewrapara"  >Shewrapara</option>
-    <option value="Agargaon"  >Agargaon</option>
-    <option value="Bijoy Sarani"  >Bijoy Sarani</option>
-    <option value="Farmgate"  >Farmgate</option>
-    <option value="Karwan Bazar"  >Karwan Bazar</option>
-    <option value="Shahbagh"  >Shahbagh</option>
-    <option value="Dhaka University"  >Dhaka University</option>
-    <option value="Secretariat" >Secretariat</option>
-    <option value="Motijheel"  >Motijheel</option>
-    <option value="Kamalapur"  >Kamalapur</option>
-
-    
-    <option value="Uttara North"  >Uttara North</option>
-    <option value="Mirpur-10" >Mirpur-10</option>
-    <option value="Farmgate"  >Farmgate</option>
-    <option value="Motijheel"  >Motijheel</option>
-    <option value="Kamalapur"  >Kamalapur</option>
-
-    
-    <option value="Uttara North" >Uttara North</option>
-    <option value="Pallabi"  >Pallabi</option>
-    <option value="Agargaon"  >Agargaon</option>
-    <option value="Farmgate"  >Farmgate</option>
-    </select>
-
-    <label>Date of Journey</label>
-    <input type="date" name="journey_date" id="journey_date">
-
-    <button type="submit">Submit</button>
-</form>
-
+<main class="main-content">
+    <div class="hero-banner">
+        <h2>Dhaka Metro Rail (MRT Line-6)</h2>
+        <p>Connecting Uttara to Motijheel • Fast, Reliable & Eco-Friendly Travel</p>
     </div>
 
-    
-    <div class="image-side">
-        <img src="dashboard1.jpg" alt="Metro Train">
+    <div class="dashboard-box">
+        <div class="form-side">
+            <h2>Book Your Journey</h2>
+            <p class="form-subtitle">Select origin and destination stations to calculate fare and book tickets.</p>
+
+            <?php if (!empty($error)): ?>
+                <div class="alert-box error-alert">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form id="journeyForm" method="post" action="<?php echo $formAction; ?>">
+                <div class="form-group">
+                    <label for="from">From Station</label>
+                    <select name="from" id="from" required>
+                        <option value="">-- Select Departure Station --</option>
+                        <?php foreach ($stations as $st): ?>
+                            <option value="<?= htmlspecialchars($st) ?>"><?= htmlspecialchars($st) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="to">To Station</label>
+                    <select name="to" id="to" required>
+                        <option value="">-- Select Destination Station --</option>
+                        <?php foreach ($stations as $st): ?>
+                            <option value="<?= htmlspecialchars($st) ?>"><?= htmlspecialchars($st) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="journey_date">Date of Journey</label>
+                    <input type="date" name="journey_date" id="journey_date" min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d') ?>" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Proceed to Booking</button>
+            </form>
+        </div>
+
+        <div class="image-side">
+            <img src="<?php echo $imgSrc; ?>" alt="Dhaka Metro Train">
+            <div class="train-badge">MRT Line-6 Express</div>
+        </div>
     </div>
 
-</div>
-<?php include "footer.php"; ?>
-<script src="dashboard.js"></script>
+    <div class="info-cards-container">
+        <div class="info-card">
+            <div class="info-icon">🕒</div>
+            <h3>Operating Hours</h3>
+            <p>07:10 AM - 09:40 PM<br><small>Saturday to Thursday</small></p>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">🚉</div>
+            <h3>Active Stations</h3>
+            <p>17 Operational Stations<br><small>Uttara North to Motijheel</small></p>
+        </div>
+        <div class="info-card">
+            <div class="info-icon">💳</div>
+            <h3>Standard Fares</h3>
+            <p>BDT 20 to BDT 100<br><small>MRT Pass & Single Journey</small></p>
+        </div>
+    </div>
+</main>
+
+<?php include __DIR__ . "/footer.php"; ?>
+<script src="<?php echo $jsSrc; ?>"></script>
 </body>
 </html>

@@ -2,16 +2,27 @@
 session_start();
 require_once('../Model/db.php');
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $phone = trim($_POST['phone'] ?? '');
 
     if (empty($phone)) {
-        $_SESSION['error'] = "Phone number is required.";
+        $_SESSION['error'] = "Mobile number is required.";
         header("Location: ../View/php/forgot_password.php");
         exit();
     }
 
-     
+    if (!preg_match('/^01[3-9]\d{8}$/', $phone)) {
+        $_SESSION['error'] = "Invalid mobile number format.";
+        header("Location: ../View/php/forgot_password.php");
+        exit();
+    }
+
+    if (!$conn) {
+        $_SESSION['error'] = "Database not connected. Please verify database connection.";
+        header("Location: ../View/php/forgot_password.php");
+        exit();
+    }
+
     $stmt = $conn->prepare("SELECT UserID FROM users WHERE Mobile = ?");
     $stmt->bind_param("s", $phone);
     $stmt->execute();
@@ -22,9 +33,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: ../View/php/updatePass.php");
         exit();
     } else {
-        $_SESSION['error'] = "Phone number does not match in our records.";
+        $_SESSION['error'] = "Mobile number not found in our records.";
         header("Location: ../View/php/forgot_password.php");
         exit();
     }
+} else {
+    header("Location: ../View/php/forgot_password.php");
+    exit();
 }
 ?>

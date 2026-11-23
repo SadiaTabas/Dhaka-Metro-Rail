@@ -1,107 +1,68 @@
 <?php
-
 session_start();
-
 include "../model/ChangePasswordModel.php";
 
-
-
-// 1. Authentication Check (Matches friend's pattern)
-
 if (!isset($_SESSION['Mobile'])) {
-
-    die("Unauthorized access");
-
+    header("Location: ../../employee/View/php/login.php");
+    exit();
 }
 
-
-
-$mobile = $_SESSION['Mobile'];
-
-
-
-// 2. Check Request Method
+$mobile = trim($_SESSION['Mobile']);
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
-
-
-    // 3. Get Inputs (using Null Coalescing Operator ?? for safety)
-
     $currentPass = $_POST['current_password'] ?? '';
-
     $newPass     = $_POST['new_password'] ?? '';
-
     $confirmPass = $_POST['confirm_password'] ?? '';
 
-
-
-    // 4. Server-side Validation (Double check even if JS exists)
-
     if (empty($currentPass) || empty($newPass) || empty($confirmPass)) {
-
         header("Location: ../view/changepassword.php?msg=empty");
-
         exit();
-
     }
 
-
+    if (strlen($newPass) < 6) {
+        header("Location: ../view/changepassword.php?msg=length");
+        exit();
+    }
 
     if ($newPass !== $confirmPass) {
-
         header("Location: ../view/changepassword.php?msg=nomatch");
-
         exit();
-
     }
-
-
-
-    // 5. Logic: Verify Old Password
 
     $userRow = getPasswordByMobile($mobile);
 
-
-
     if (!$userRow) {
-
         header("Location: ../view/changepassword.php?msg=usernotfound");
-
         exit();
-
     }
 
+    // Verify current password (supports hash & legacy plaintext)
+    $matches = password_verify($currentPass, $userRow['Password']) || ($currentPass === $userRow['Password']);
 
-
-    // NOTE: In a real app, use password_verify($currentPass, $userRow['Password'])
-
-    if ($currentPass !== $userRow['Password']) {
-
+    if (!$matches) {
         header("Location: ../view/changepassword.php?msg=wrong");
-
         exit();
-
     }
 
-
-
-    // 6. Logic: Update New Password
-
-  if (updatePasswordByMobile($mobile, $newPass)) {
-    if ($_SESSION['RoleID'] == 1) {
-        header("Location: ../view/admindashboard.php?msg=updated");
-    } elseif ($_SESSION['RoleID'] == 2) {
-        header("Location: ../../employee/View/php/employeDashboard.php?msg=updated");
-    } elseif ($_SESSION['RoleID'] == 3) {
-        header("Location: ../../passenger/view/dashboard_after_login.php?msg=updated");
+    if (updatePasswordByMobile($mobile, $newPass)) {
+        $roleID = (int)($_SESSION['RoleID'] ?? 3);
+        if ($roleID === 1) {
+            header("Location: ../view/admindashboard.php?msg=password_updated");
+        } elseif ($roleID === 2) {
+            header("Location: ../../employee/View/php/employeDashboard.php?msg=password_updated");
+        } elseif ($roleID === 3) {
+            header("Location: ../../passenger/view/dashboard_after_login.php?msg=password_updated");
+        } else {
+            header("Location: ../../employee/View/php/login.php?msg=password_updated");
+        }
+        exit();
     } else {
-        header("Location: ../../employee/View/php/login.php");
+        header("Location: ../view/changepassword.php?msg=error");
+        exit();
     }
-    exit();
-}
 } else {
-    // If user tries to open controller directly
     header("Location: ../view/changepassword.php");
+    exit();
 }
 ?>

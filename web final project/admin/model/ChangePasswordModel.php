@@ -1,21 +1,34 @@
-    
 <?php
 require_once __DIR__ . '/Database.php';
 
 function getPasswordByMobile($mobile) {
     global $conn;
-    $safeMobile = mysqli_real_escape_string($conn, $mobile);
-    $sql = "SELECT Password FROM users WHERE Mobile = '$safeMobile'";
-    $result = mysqli_query($conn, $sql);
-    return mysqli_fetch_assoc($result);
+    if (!$conn) return null;
+
+    $stmt = $conn->prepare("SELECT Password FROM users WHERE Mobile = ?");
+    if ($stmt) {
+        $stmt->bind_param("s", $mobile);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        return $row;
+    }
+    return null;
 }
 
 function updatePasswordByMobile($mobile, $newPassword) {
     global $conn;
-    $safeMobile = mysqli_real_escape_string($conn, $mobile);
-    $safePass   = mysqli_real_escape_string($conn, $newPassword);
+    if (!$conn) return false;
 
-    $sql = "UPDATE users SET Password = '$safePass' WHERE Mobile = '$safeMobile'";
-    return mysqli_query($conn, $sql);
+    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+    $stmt = $conn->prepare("UPDATE users SET Password = ? WHERE Mobile = ?");
+    if ($stmt) {
+        $stmt->bind_param("ss", $hashedPassword, $mobile);
+        $res = $stmt->execute();
+        $stmt->close();
+        return $res;
+    }
+    return false;
 }
 ?>

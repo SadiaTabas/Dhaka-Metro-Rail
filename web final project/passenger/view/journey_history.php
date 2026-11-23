@@ -2,91 +2,101 @@
 session_start();
 
 if (!isset($_SESSION['UserID'])) {
-    die("Please login first");
+    header("Location: ../../employee/View/php/login.php");
+    exit();
 }
 
- 
-
+include "../model/Database.php";
 include "../model/JourneyModel.php";
 include "header.php";
 
- 
+$userId = (int)$_SESSION['UserID'];
 
-$userId = $_SESSION['UserID'];
- 
-$userId = $_SESSION['UserID'] ?? 0;
+$passengerRes = getPassenger($userId);
+$passenger = $passengerRes ? mysqli_fetch_assoc($passengerRes) : null;
+$passengerName = $passenger ? trim($passenger['FirstName'] . " " . $passenger['LastName']) : ($_SESSION['UserName'] ?? "Passenger");
 
-$passenger = mysqli_fetch_assoc(getPassenger($userId));
-$total = mysqli_fetch_assoc(getTotalTicket($userId));
+$totalRes = getTotalTicket($userId);
+$total = $totalRes ? mysqli_fetch_assoc($totalRes) : ['total' => 0];
+
 $journeys = getJourneyHistory($userId);
 ?>
 
 <link rel="stylesheet" href="journey_history.css">
- 
+<link rel="stylesheet" href="dashboard.css">
 
-<div class="dashboard-content">
- 
-    <h2 class="page-title">Dhaka Metro  – Journey History</h2>
+<main class="main-content">
+    <div class="dashboard-content">
+        <div class="history-header">
+            <h2>Dhaka Metro Rail – Journey History</h2>
+            <p>Review and manage all your past journey logs on MRT Line-6</p>
+        </div>
 
-    <p><strong>Passenger:</strong>
-        <?php echo $passenger['FirstName']." ".$passenger['LastName']; ?>
-    </p>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">Passenger Name:</span>
+                <span class="stat-val"><?= htmlspecialchars($passengerName) ?></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Completed Bookings:</span>
+                <span class="stat-val stat-highlight"><?= (int)($total['total'] ?? 0) ?></span>
+            </div>
+        </div>
 
-    <p><strong>Total Ticket Booking:</strong>
-        <?php echo $total['total']; ?>
-    </p>
+        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
+            <div class="alert-box success-alert">Selected journey history records deleted successfully.</div>
+        <?php elseif (isset($_GET['error'])): ?>
+            <div class="alert-box error-alert">Please select at least one journey record to delete.</div>
+        <?php endif; ?>
 
-    <?php if (isset($_GET['msg'])) { ?>
-        <p class="success-msg">Selected journey history deleted</p>
-    <?php } ?>
+        <form method="post" action="../controller/JourneyController.php" onsubmit="return validateDelete();">
+            <div class="table-responsive">
+                <table class="history-table-grid">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Select</th>
+                            <th>#</th>
+                            <th>Departure Station</th>
+                            <th>Destination Station</th>
+                            <th>Date of Journey</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $no = 1;
+                        if ($journeys && mysqli_num_rows($journeys) > 0):
+                            while ($row = mysqli_fetch_assoc($journeys)):
+                        ?>
+                            <tr>
+                                <td style="text-align: center;">
+                                    <input type="checkbox" name="ticket_id[]" value="<?= $row['TicketID'] ?>" class="row-checkbox">
+                                </td>
+                                <td><?= $no++ ?></td>
+                                <td><strong><?= htmlspecialchars($row['FromStation']) ?></strong></td>
+                                <td><strong><?= htmlspecialchars($row['ToStation']) ?></strong></td>
+                                <td><?= htmlspecialchars($row['JourneyDate']) ?></td>
+                                <td><span class="status-badge status-confirmed"><?= htmlspecialchars($row['Status'] ?? 'Confirmed') ?></span></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 30px; color:#666;">
+                                    No journey records found. <a href="dashboard_after_login.php" style="color:#006a4e; font-weight:bold;">Book a new journey</a>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
 
-    <form method="post"
-          action="../controller/JourneyController.php"
-          onsubmit="return validateDelete();">
-
-        <?php
-        $no = 1;
-        while ($row = mysqli_fetch_assoc($journeys)) {
-        ?>
-            <table class="history-table">
-                <tr>
-                    <td><strong>No</strong></td>
-                    <td><?php echo $no++; ?></td>
-                </tr>
-                <tr>
-                    <td><strong>From</strong></td>
-                    <td><?php echo $row['FromStation']; ?></td>
-                </tr>
-                <tr>
-                    <td><strong>To</strong></td>
-                    <td><?php echo $row['ToStation']; ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Date</strong></td>
-                    <td><?php echo $row['JourneyDate']; ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Select</strong></td>
-                    <td>
-                        <input type="checkbox"
-                               name="ticket_id[]"
-                               value="<?php echo $row['TicketID']; ?>">
-                    </td>
-                </tr>
-            </table>
-            <br>
-        <?php } ?>
-
-        <button type="submit" class="danger-btn">Delete</button>
-        
-        <button type="button"class="danger-btn" onclick="window.location.href='payment_record_page.php '">
-   Back
-</button>
-    </form>
-     
-</div>
-
+            <div class="history-actions">
+                <button type="submit" class="danger-btn">🗑️ Delete Selected</button>
+                <a href="payment_record_page.php" class="back-btn">← Back to Portal</a>
+            </div>
+        </form>
+    </div>
+</main>
 
 <script src="journey.js"></script>
-
 <?php include "footer.php"; ?>

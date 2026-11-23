@@ -3,23 +3,29 @@ session_start();
 include "../model/JourneyModel.php";
 
 if (!isset($_SESSION['UserID'])) {
-    die("Unauthorized access");
+    header("Location: ../../employee/View/php/login.php");
+    exit();
 }
 
-$userId = $_SESSION['UserID'];
+$userId = (int)$_SESSION['UserID'];
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
+if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
-    if (!isset($_POST['ticket_id'])) {
-        die("No record selected");
+    if (!isset($_POST['ticket_id']) || empty($_POST['ticket_id'])) {
+        header("Location: ../view/journey_history.php?error=no_selection");
+        exit();
     }
 
-    $ticketIds = $_POST['ticket_id'];
+    $ticketIds = (array)$_POST['ticket_id'];
 
     foreach ($ticketIds as $id) {
         deleteJourney((int)$id, $userId);
     }
 
     header("Location: ../view/journey_history.php?msg=deleted");
+    exit();
+} else {
+    header("Location: ../view/journey_history.php");
+    exit();
 }
 ?>

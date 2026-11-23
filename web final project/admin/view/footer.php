@@ -1,37 +1,9 @@
- 
-<style>
- 
- html, body {
-    height: 100%;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.main-content {
-    flex: 1;
-}
-
- 
-.footer {
-    text-align: center;
-    padding: 5px 0;
-    color: #006400;
-    font-weight: bold;
-    border-top: 1px solid #ccc;
-    background-color: #f4fff4;
-}
-
-</style>
-
- 
-
- 
 <footer class="footer">
-    <p>&copy; <?php echo date("Y"); ?> Dhaka Metro | All rights reserved</p>
+    <div class="footer-container">
+        <div class="footer-branding">
+            <span class="footer-title">Dhaka Mass Rapid Transit (MRT Line-6)</span>
+            <span class="footer-tagline">Safe, Rapid, Reliable and Eco-Friendly Mass Urban Transit</span>
+        </div>
+        <p class="footer-copy">&copy; <?php echo date("Y"); ?> Dhaka Metro Rail Management System. All rights reserved.</p>
+    </div>
 </footer>
-
-
-

@@ -3,48 +3,61 @@ session_start();
 
 include "../model/Database.php";
 include "../model/PaymentModel.php";
- 
+
 if (!isset($_SESSION['UserID'])) {
-    header("Location:/employee/View/php/login.php");
+    header("Location: ../../employee/View/php/login.php");
     exit();
 }
 
-$userID = $_SESSION['UserID'];
+$userID = (int)$_SESSION['UserID'];
 
-if (isset($_POST['submit'])) {
+if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['submit'])) {
 
-    $amount  = trim($_POST['amount']);
-    $method  = $_POST['payment_method'] ?? "";
-    $routeID = $_POST['route_id'] ?? 0;
-
-    $walletBalance = getWalletBalance($userID);
+    $amount      = trim($_POST['amount'] ?? '');
+    $method      = trim($_POST['payment_method'] ?? '');
+    $routeID     = (int)($_POST['route_id'] ?? 0);
+    $journeyDate = trim($_POST['journey_date'] ?? date('Y-m-d'));
 
     if ($amount === "" || !is_numeric($amount) || $amount <= 0) {
         $_SESSION['alert'] = "Enter a valid amount.";
-    }
-    elseif ($method === "") {
-        $_SESSION['alert'] = "Select a payment method.";
-    }
-    elseif ($amount > $walletBalance) {
-        $_SESSION['alert'] = "Insufficient balance!";
-    }
-    else {
-        $journeyDate = date('Y-m-d');  
-        $ticketID = createTicket($userID, $routeID, $journeyDate);
-
-        if ($ticketID > 0) {
-            deductWalletBalance($userID, $amount);
-            addTransaction($userID, $amount, "Debit", $method);
-            addPayment($ticketID, $amount);
-            
-
-            $_SESSION['alert'] = "Payment successful! BDT $amount deducted.";
-        } else {
-            $_SESSION['alert'] = "Failed to create ticket. Please try again.";
-        }
+        header("Location: ../view/payment.php?route_id=$routeID");
+        exit();
     }
 
-    header("Location: ../view/payment.php?route_id=$routeID");
+    if ($method === "") {
+        $_SESSION['alert'] = "Please select a payment method.";
+        header("Location: ../view/payment.php?route_id=$routeID");
+        exit();
+    }
+
+    $walletBalance = getWalletBalance($userID);
+
+    if ($amount > $walletBalance) {
+        $_SESSION['alert'] = "Insufficient balance! Your wallet has " . number_format($walletBalance, 2) . " BDT, but ticket fare is " . number_format($amount, 2) . " BDT.";
+        header("Location: ../view/payment.php?route_id=$routeID");
+        exit();
+    }
+
+    $ticketID = createTicket($userID, $routeID, $journeyDate);
+
+    if ($ticketID > 0) {
+        deductWalletBalance($userID, $amount);
+        addTransaction($userID, $amount, "Debit", "Ticket #$ticketID ($method)");
+        addPayment($ticketID, $amount);
+
+        // Clear temporary journey session
+        unset($_SESSION['temp_journey']);
+
+        $_SESSION['alert_success'] = "Payment successful! Ticket #$ticketID confirmed. " . number_format($amount, 2) . " BDT deducted.";
+        header("Location: ../view/payment_record_page.php?type=tickets&msg=success");
+        exit();
+    } else {
+        $_SESSION['alert'] = "Failed to generate ticket. Please try again.";
+        header("Location: ../view/payment.php?route_id=$routeID");
+        exit();
+    }
+} else {
+    header("Location: ../view/dashboard_after_login.php");
     exit();
 }
 ?>

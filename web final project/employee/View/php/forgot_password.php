@@ -7,42 +7,58 @@ unset($_SESSION['error']);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forgot Password</title>
-    <link rel="stylesheet" href="../css/common.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - Dhaka Metro Rail</title>
+    <link rel="stylesheet" href="../css/login.css">
+    <link rel="stylesheet" href="../../../passenger/view/dashboard.css">
 </head>
 <body>
 
-<div class="bg"></div>
-  
-    <?php require_once('header.php'); ?>
-
-<form method="post"
-      action="../../Controller/forgotHandle.php"
-      onsubmit="return validateForgot()">
-
-    <h2>Forgot Password</h2>
-
-    <?php if ($error): ?>
-        <p style="color:red;text-align:center;font-size:14px;">
-            <?= htmlspecialchars($error) ?>
-        </p>
-    <?php endif; ?>
-
-    <div class="row">
-        <label>Phone Number</label>
-        <input type="text" id="phone" name="phone" placeholder="01XXXXXXXXX">
-        <span id="phoneError" style="color:red;font-size:13px;"></span>
+<header class="header">
+    <div class="header-left">
+        <a href="../../../passenger/view/dashboard.php" style="display:flex; align-items:center; text-decoration:none;">
+            <img src="../../../passenger/view/signuplogo.png" alt="Metro Logo" class="logo">
+            <h1>Dhaka Metro</h1>
+        </a>
     </div>
-
-    <button type="submit">Reset</button>
-
-    <div style="text-align:center;margin-top:10px;">
-        <a href="login.php">← Back to Login</a>
+    <div class="header-right">
+        <a href="../../../passenger/view/dashboard.php" class="nav-item">Home</a>
+        <a href="login.php" class="nav-btn-login">Sign In</a>
     </div>
-</form>
- 
-    <?php require_once('footer.php'); ?>
+</header>
+
+<main class="main-content">
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Account Recovery</h2>
+                <p>Enter your registered mobile number to reset password</p>
+            </div>
+
+            <?php if (!empty($error)): ?>
+                <div class="alert-box error-alert">
+                    <?= htmlspecialchars($error) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="post" action="../../Controller/forgotHandle.php" onsubmit="return validateForgot()">
+                <div class="form-group">
+                    <label for="phone">Registered Mobile Number</label>
+                    <input type="text" id="phone" name="phone" placeholder="01XXXXXXXXX" maxlength="11" required>
+                    <span id="phoneError" class="input-error-msg"></span>
+                </div>
+
+                <button type="submit" class="btn-submit">Verify Account</button>
+
+                <div class="login-footer-links">
+                    <p><a href="login.php">← Back to Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<?php require_once('footer.php'); ?>
 <script src="../js/forgot.js"></script>
 </body>
 </html>
-

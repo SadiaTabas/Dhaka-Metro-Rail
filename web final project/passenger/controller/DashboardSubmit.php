@@ -2,7 +2,6 @@
 session_start();
 include "../model/Database.php";
 
- 
 $redirectPage = isset($_SESSION['UserID'])
     ? "../view/dashboard_after_login.php"
     : "../view/dashboard.php";
@@ -20,32 +19,67 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     }
 
     if ($from === $to) {
-        $_SESSION['error'] = "From and To station cannot be the same!";
+        $_SESSION['error'] = "From and To stations cannot be the same!";
         header("Location: $redirectPage");
         exit();
     }
 
-    $sql = "SELECT RouteID FROM routes WHERE FromStation = ? AND ToStation = ?";
-    $stmt = $conn->prepare($sql);
+    if (!$conn) {
+        $_SESSION['error'] = "Database not connected. Please check configuration.";
+        header("Location: $redirectPage");
+        exit();
+    }
+
+    // Look for existing route
+    $stmt = $conn->prepare("SELECT RouteID, Fare FROM routes WHERE FromStation = ? AND ToStation = ?");
     $stmt->bind_param("ss", $from, $to);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    if ($result->num_rows === 0) {
-        $_SESSION['error'] = "No route found for selected stations!";
-        header("Location: $redirectPage");
-        exit();
+    if ($result->num_rows > 0) {
+        $route = $result->fetch_assoc();
+        $routeID = $route['RouteID'];
+        $stmt->close();
+    } else {
+        $stmt->close();
+        // Station order on MRT Line-6
+        $allStations = [
+            'Uttara North', 'Uttara Center', 'Uttara South', 'Pallabi',
+            'Mirpur-11', 'Mirpur-10', 'Kazipara', 'Shewrapara',
+            'Agargaon', 'Bijoy Sarani', 'Farmgate', 'Karwan Bazar',
+            'Shahbagh', 'Dhaka University', 'Secretariat', 'Motijheel', 'Kamalapur'
+        ];
+        $i1 = array_search($from, $allStations);
+        $i2 = array_search($to, $allStations);
+
+        if ($i1 !== false && $i2 !== false) {
+            $dist = abs($i1 - $i2);
+            $fare = min(100.00, max(20.00, 20.00 + ($dist - 1) * 10.00));
+        } else {
+            $fare = 50.00; // fallback standard fare
+        }
+
+        // Insert new route
+        $insStmt = $conn->prepare("INSERT INTO routes (FromStation, ToStation, Fare) VALUES (?, ?, ?)");
+        if ($insStmt) {
+            $insStmt->bind_param("ssd", $from, $to, $fare);
+            $insStmt->execute();
+            $routeID = $insStmt->insert_id;
+            $insStmt->close();
+        } else {
+            $_SESSION['error'] = "Could not create route. Please try again.";
+            header("Location: $redirectPage");
+            exit();
+        }
     }
 
-    $route = $result->fetch_assoc();
-    $routeID = $route['RouteID'];
-
-     
-    header("Location: ../view/payment.php?route_id=$routeID&journey_date=$date");
+    // Redirect to payment page
+    header("Location: ../view/payment.php?route_id=$routeID&journey_date=" . urlencode($date));
     exit();
 
 } else {
-    $_SESSION['error'] = "Invalid request!";
+    $_SESSION['error'] = "Invalid request method.";
     header("Location: $redirectPage");
     exit();
 }
+?>
