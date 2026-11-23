@@ -91,8 +91,8 @@ if ($searchedTicket > 0) {
                 </thead>
                 <tbody>
                     <?php 
-                    if ($transactions && mysqli_num_rows($transactions) > 0) {
-                        while($row = mysqli_fetch_assoc($transactions)) { 
+                    if ($transactions && $transactions->num_rows > 0) {
+                        while($row = $transactions->fetch_assoc()) { 
                             $isCredit = ($row['Type'] === 'Credit');
                         ?>
                         <tr style="border-bottom:1px solid #e2e8f0;">

@@ -18,11 +18,11 @@ include "header.php";
 $userId = (int)$_SESSION['UserID'];
 
 $passengerRes = getPassenger($userId);
-$passenger = $passengerRes ? mysqli_fetch_assoc($passengerRes) : null;
+$passenger = ($passengerRes && method_exists($passengerRes, 'fetch_assoc')) ? $passengerRes->fetch_assoc() : ($passengerRes ? mysqli_fetch_assoc($passengerRes) : null);
 $passengerName = $passenger ? trim($passenger['FirstName'] . " " . $passenger['LastName']) : ($_SESSION['UserName'] ?? "Passenger");
 
 $totalRes = getTotalTicket($userId);
-$total = $totalRes ? mysqli_fetch_assoc($totalRes) : ['total' => 0];
+$total = ($totalRes && method_exists($totalRes, 'fetch_assoc')) ? $totalRes->fetch_assoc() : ($totalRes ? mysqli_fetch_assoc($totalRes) : ['total' => 0]);
 
 $journeys = getJourneyHistory($userId);
 ?>
@@ -70,8 +70,8 @@ $journeys = getJourneyHistory($userId);
                     <tbody>
                         <?php
                         $no = 1;
-                        if ($journeys && mysqli_num_rows($journeys) > 0):
-                            while ($row = mysqli_fetch_assoc($journeys)):
+                        if ($journeys && $journeys->num_rows > 0):
+                            while ($row = $journeys->fetch_assoc()):
                         ?>
                             <tr>
                                 <td style="text-align: center;">

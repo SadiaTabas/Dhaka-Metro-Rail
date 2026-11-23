@@ -55,8 +55,8 @@ $passengers = getAllPassengers();
                 </thead>
                 <tbody>
                     <?php 
-                    if ($passengers && mysqli_num_rows($passengers) > 0) {
-                        while($row = mysqli_fetch_assoc($passengers)) { 
+                    if ($passengers && $passengers->num_rows > 0) {
+                        while($row = $passengers->fetch_assoc()) { 
                             $status = $row['Status'] ?? 'Active';
                             $isBlocked = ($status === 'Blocked');
                         ?>

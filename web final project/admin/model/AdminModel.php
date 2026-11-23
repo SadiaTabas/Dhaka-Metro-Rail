@@ -4,42 +4,42 @@ include "Database.php";
 function getTotalStaff() {
     global $conn;
     if (!$conn) return 0;
-    $res = mysqli_query($conn, "SELECT COUNT(*) AS total FROM users WHERE RoleID = 2");
-    return $res ? (int)mysqli_fetch_assoc($res)['total'] : 0;
+    $res = $conn->query("SELECT COUNT(*) AS total FROM users WHERE RoleID = 2");
+    return ($res && $row = $res->fetch_assoc()) ? (int)$row['total'] : 0;
 }
 
 function getTotalRoutes() {
     global $conn;
     if (!$conn) return 0;
-    $res = mysqli_query($conn, "SELECT COUNT(*) AS total FROM routes");
-    return $res ? (int)mysqli_fetch_assoc($res)['total'] : 0;
+    $res = $conn->query("SELECT COUNT(*) AS total FROM routes");
+    return ($res && $row = $res->fetch_assoc()) ? (int)$row['total'] : 0;
 }
 
 function getTotalPassengers() {
     global $conn;
     if (!$conn) return 0;
-    $res = mysqli_query($conn, "SELECT COUNT(*) AS total FROM users WHERE RoleID = 3");
-    return $res ? (int)mysqli_fetch_assoc($res)['total'] : 0;
+    $res = $conn->query("SELECT COUNT(*) AS total FROM users WHERE RoleID = 3");
+    return ($res && $row = $res->fetch_assoc()) ? (int)$row['total'] : 0;
 }
 
 function getTotalBookings() {
     global $conn;
     if (!$conn) return 0;
-    $res = mysqli_query($conn, "SELECT COUNT(*) AS total FROM tickets");
-    return $res ? (int)mysqli_fetch_assoc($res)['total'] : 0;
+    $res = $conn->query("SELECT COUNT(*) AS total FROM tickets");
+    return ($res && $row = $res->fetch_assoc()) ? (int)$row['total'] : 0;
 }
 
 function getTotalRevenue() {
     global $conn;
     if (!$conn) return 0;
-    $res = mysqli_query($conn, "SELECT COALESCE(SUM(Amount), 0) AS total FROM payments WHERE Status = 'Success'");
-    return $res ? (float)mysqli_fetch_assoc($res)['total'] : 0;
+    $res = $conn->query("SELECT COALESCE(SUM(Amount), 0) AS total FROM payments WHERE Status = 'Success'");
+    return ($res && $row = $res->fetch_assoc()) ? (float)$row['total'] : 0;
 }
 
 function getAllRoutes() {
     global $conn;
     if (!$conn) return false;
-    return mysqli_query($conn, "SELECT * FROM routes ORDER BY RouteID ASC");
+    return $conn->query("SELECT * FROM routes ORDER BY RouteID ASC");
 }
 
 function deleteRoute($routeId) {
@@ -72,7 +72,7 @@ function addRoute($from, $to, $fare) {
 function getAllStaff() {
     global $conn;
     if (!$conn) return false;
-    return mysqli_query($conn, "SELECT * FROM users WHERE RoleID = 2 ORDER BY UserID ASC");
+    return $conn->query("SELECT * FROM users WHERE RoleID = 2 ORDER BY UserID ASC");
 }
 
 function deleteStaff($mobile) {

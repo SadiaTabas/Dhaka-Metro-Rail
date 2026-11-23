@@ -17,8 +17,8 @@ $userID = (int)$_SESSION['UserID'];
 $empName = $_SESSION['UserName'] ?? "Staff";
 
 if ($conn) {
-    $resName = mysqli_query($conn, "SELECT FirstName, LastName FROM users WHERE UserID = $userID");
-    if ($resName && $row = mysqli_fetch_assoc($resName)) {
+    $resName = $conn->query("SELECT FirstName, LastName FROM users WHERE UserID = $userID");
+    if ($resName && $row = $resName->fetch_assoc()) {
         $empName = trim($row['FirstName'] . " " . $row['LastName']);
         $_SESSION['UserName'] = $empName;
     }
@@ -31,17 +31,17 @@ $blockedCards = 0;
 $totalTransactions = 0;
 
 if ($conn) {
-    $pRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3");
-    if ($pRes && $row = mysqli_fetch_assoc($pRes)) $totalPassengers = (int)$row['cnt'];
+    $pRes = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3");
+    if ($pRes && $row = $pRes->fetch_assoc()) $totalPassengers = (int)$row['cnt'];
 
-    $actRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND (Status = 'Active' OR Status IS NULL)");
-    if ($actRes && $row = mysqli_fetch_assoc($actRes)) $activeCards = (int)$row['cnt'];
+    $actRes = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND (Status = 'Active' OR Status IS NULL)");
+    if ($actRes && $row = $actRes->fetch_assoc()) $activeCards = (int)$row['cnt'];
 
-    $blkRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND Status = 'Blocked'");
-    if ($blkRes && $row = mysqli_fetch_assoc($blkRes)) $blockedCards = (int)$row['cnt'];
+    $blkRes = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE RoleID = 3 AND Status = 'Blocked'");
+    if ($blkRes && $row = $blkRes->fetch_assoc()) $blockedCards = (int)$row['cnt'];
 
-    $txRes = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM transactions");
-    if ($txRes && $row = mysqli_fetch_assoc($txRes)) $totalTransactions = (int)$row['cnt'];
+    $txRes = $conn->query("SELECT COUNT(*) as cnt FROM transactions");
+    if ($txRes && $row = $txRes->fetch_assoc()) $totalTransactions = (int)$row['cnt'];
 }
 ?>
 <!DOCTYPE html>

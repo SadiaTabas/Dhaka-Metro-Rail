@@ -55,7 +55,11 @@ function deleteJourney($ticketID, $userID) {
     $ticketID = (int)$ticketID;
     $userID = (int)$userID;
 
-    mysqli_begin_transaction($conn);
+    if (method_exists($conn, 'begin_transaction')) {
+        $conn->begin_transaction();
+    } elseif (function_exists('mysqli_begin_transaction')) {
+        mysqli_begin_transaction($conn);
+    }
     try {
         $pStmt = $conn->prepare("DELETE FROM payments WHERE TicketID = ?");
         if ($pStmt) {
@@ -71,10 +75,18 @@ function deleteJourney($ticketID, $userID) {
             $tStmt->close();
         }
 
-        mysqli_commit($conn);
+        if (method_exists($conn, 'commit')) {
+            $conn->commit();
+        } elseif (function_exists('mysqli_commit')) {
+            mysqli_commit($conn);
+        }
         return true;
     } catch (Exception $e) {
-        mysqli_rollback($conn);
+        if (method_exists($conn, 'rollback')) {
+            $conn->rollback();
+        } elseif (function_exists('mysqli_rollback')) {
+            mysqli_rollback($conn);
+        }
         return false;
     }
 }

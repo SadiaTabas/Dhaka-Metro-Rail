@@ -4,7 +4,7 @@ include "db.php";
 function getAllStations() {
     global $conn;
     if (!$conn) return false;
-    return mysqli_query($conn, "SELECT * FROM stations ORDER BY StationID ASC");
+    return $conn->query("SELECT * FROM stations ORDER BY StationID ASC");
 }
 
 function addStation($name) {
@@ -55,13 +55,13 @@ function getAllSchedules() {
             FROM schedules s
             LEFT JOIN routes r ON s.RouteID = r.RouteID
             ORDER BY s.ScheduleID ASC";
-    return mysqli_query($conn, $sql);
+    return $conn->query($sql);
 }
 
 function getAllRoutes() {
     global $conn;
     if (!$conn) return false;
-    return mysqli_query($conn, "SELECT * FROM routes ORDER BY RouteID ASC");
+    return $conn->query("SELECT * FROM routes ORDER BY RouteID ASC");
 }
 
 function addSchedule($trainName, $routeId, $depTime, $arrTime) {
@@ -114,7 +114,7 @@ function getAllValidations() {
             FROM ticket_validations v
             LEFT JOIN users u ON v.ValidatedBy = u.UserID
             ORDER BY v.ValidationTime DESC";
-    return mysqli_query($conn, $sql);
+    return $conn->query($sql);
 }
 
 function addValidation($ticketId, $status, $validatedBy) {
@@ -163,7 +163,7 @@ function deleteValidation($id) {
 function getAllPassengers() {
     global $conn;
     if (!$conn) return false;
-    return mysqli_query($conn, "SELECT UserID, FirstName, LastName, Mobile, Status FROM users WHERE RoleID = 3 ORDER BY UserID ASC");
+    return $conn->query("SELECT UserID, FirstName, LastName, Mobile, Status FROM users WHERE RoleID = 3 ORDER BY UserID ASC");
 }
 
 function updateUserStatus($id, $status) {
@@ -187,7 +187,7 @@ function getAllTransactions() {
             FROM transactions t 
             LEFT JOIN users u ON t.UserID = u.UserID 
             ORDER BY t.TransactionID DESC";
-    return mysqli_query($conn, $sql);
+    return $conn->query($sql);
 }
 
 function getTransactionsByTicketID($ticket_id) {

@@ -17,7 +17,7 @@ if (!isset($_SESSION['UserID'])) {
 $userID = (int)$_SESSION['UserID'];
 
 $userRes = getUserName($userID);
-$user = $userRes ? mysqli_fetch_assoc($userRes) : null;
+$user = ($userRes && method_exists($userRes, 'fetch_assoc')) ? $userRes->fetch_assoc() : ($userRes ? mysqli_fetch_assoc($userRes) : null);
 $userName = $user ? trim($user['FirstName'] . " " . $user['LastName']) : ($_SESSION['UserName'] ?? "Passenger");
 
 $type = $_GET['type'] ?? "tickets";
@@ -72,8 +72,8 @@ $msg = $_GET['msg'] ?? "";
                         <tbody>
                             <?php
                             $tickets = getTicketHistory($userID);
-                            if ($tickets && mysqli_num_rows($tickets) > 0):
-                                while ($row = mysqli_fetch_assoc($tickets)):
+                            if ($tickets && $tickets->num_rows > 0):
+                                while ($row = $tickets->fetch_assoc()):
                             ?>
                                 <tr>
                                     <td><strong>#<?= htmlspecialchars($row['TicketID']) ?></strong></td>
@@ -114,8 +114,8 @@ $msg = $_GET['msg'] ?? "";
                         <tbody>
                             <?php
                             $payments = getPaymentHistory($userID);
-                            if ($payments && mysqli_num_rows($payments) > 0):
-                                while ($row = mysqli_fetch_assoc($payments)):
+                            if ($payments && $payments->num_rows > 0):
+                                while ($row = $payments->fetch_assoc()):
                             ?>
                                 <tr>
                                     <td><strong>#<?= htmlspecialchars($row['PaymentID']) ?></strong></td>

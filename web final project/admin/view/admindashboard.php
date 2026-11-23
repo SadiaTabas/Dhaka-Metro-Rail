@@ -119,8 +119,8 @@ include "adminheader.php";
                 </thead>
                 <tbody>
                 <?php 
-                if ($routes && mysqli_num_rows($routes) > 0) {
-                    while ($r = mysqli_fetch_assoc($routes)) { ?>
+                if ($routes && $routes->num_rows > 0) {
+                    while ($r = $routes->fetch_assoc()) { ?>
                     <tr>
                         <td><strong>#<?= $r['RouteID'] ?></strong></td>
                         <td><?= htmlspecialchars($r['FromStation']) ?></td>
@@ -191,8 +191,8 @@ include "adminheader.php";
                 </thead>
                 <tbody>
                 <?php 
-                if ($staff && mysqli_num_rows($staff) > 0) {
-                    while ($s = mysqli_fetch_assoc($staff)) { ?>
+                if ($staff && $staff->num_rows > 0) {
+                    while ($s = $staff->fetch_assoc()) { ?>
                     <tr>
                         <td><strong><?= htmlspecialchars($s['Mobile']) ?></strong></td>
                         <td><?= htmlspecialchars($s['FirstName'] . " " . $s['LastName']) ?></td>

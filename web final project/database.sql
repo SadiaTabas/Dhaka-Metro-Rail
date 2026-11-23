@@ -167,9 +167,9 @@ INSERT IGNORE INTO `routes` (`FromStation`, `ToStation`, `Fare`) VALUES
 -- Employee: 01711000002 / employee123
 -- Passenger: 01711000003 / pass123
 INSERT IGNORE INTO `users` (`UserID`, `RoleID`, `FirstName`, `LastName`, `Mobile`, `NID`, `DateOfBirth`, `Gender`, `Password`, `Status`) VALUES
-(1, 1, 'System', 'Admin', '01711000001', '1990123456789', '1990-01-01', 'Male', '$2y$10$wT3x9e9sMhG/J07L7oKfZ.2Bskq9fX3E5x7413u8WnNqX1pZ5K.eO', 'Active'),
-(2, 2, 'Rafiqul', 'Islam', '01711000002', '1992123456789', '1992-05-10', 'Male', '$2y$10$wT3x9e9sMhG/J07L7oKfZ.2Bskq9fX3E5x7413u8WnNqX1pZ5K.eO', 'Active'),
-(3, 3, 'Sadia', 'Tabassum', '01711000003', '1998269251234', '2000-01-15', 'Female', '$2y$10$wT3x9e9sMhG/J07L7oKfZ.2Bskq9fX3E5x7413u8WnNqX1pZ5K.eO', 'Active');
+(1, 1, 'System', 'Admin', '01711000001', '1990123456789', '1990-01-01', 'Male', '$2y$12$/kBAe6F/yq696nEw1dXlM.2ynhQRpesYBbUaXNJ6uAvfIoR.N4buq', 'Active'),
+(2, 2, 'Rafiqul', 'Islam', '01711000002', '1992123456789', '1992-05-10', 'Male', '$2y$12$Mr24xzwcJvqBhm2UwXxB8ep1zxfchCF4cj7U6HiiEdeGMvoDOfKRC', 'Active'),
+(3, 3, 'Sadia', 'Tabassum', '01711000003', '1998269251234', '2000-01-15', 'Female', '$2y$12$I8Nlwn9khoXK82gobqy7Ie.7fWonxwVu7k5Ou6j/lwbiczOKZoN22', 'Active');
 
 -- Initial Wallets
 INSERT IGNORE INTO `wallet` (`UserID`, `Balance`) VALUES

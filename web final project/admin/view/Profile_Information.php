@@ -31,7 +31,7 @@ if ($roleID === 1) {
 }
 
 $result  = getUserProfile($userId);
-$profile = $result ? mysqli_fetch_assoc($result) : null;
+$profile = ($result && method_exists($result, 'fetch_assoc')) ? $result->fetch_assoc() : ($result ? mysqli_fetch_assoc($result) : null);
 ?>
 <!DOCTYPE html>
 <html lang="en">
