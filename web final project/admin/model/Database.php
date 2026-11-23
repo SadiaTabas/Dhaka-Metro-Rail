@@ -2,6 +2,9 @@
 // Dhaka Metro Rail - Database Connection
 // Supports Local XAMPP and Production Cloud MySQL via Environment Variables
 
+// Suppress mysqli throwing exceptions so unconfigured production environments fail gracefully
+mysqli_report(MYSQLI_REPORT_OFF);
+
 $servername = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
 $username   = getenv('DB_USER') ?: getenv('MYSQL_USER') ?: 'root';
 $password   = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : (getenv('MYSQL_PASSWORD') !== false ? getenv('MYSQL_PASSWORD') : '');
@@ -29,12 +32,21 @@ if ($conn) {
     // Set 5s connection timeout
     mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
 
-    $db_connected = @mysqli_real_connect($conn, $servername, $username, $password, $dbname, $port);
-    if ($db_connected) {
-        mysqli_set_charset($conn, 'utf8mb4');
-    } else {
-        $GLOBALS['db_connection_error'] = mysqli_connect_error();
+    try {
+        $db_connected = @mysqli_real_connect($conn, $servername, $username, $password, $dbname, $port);
+        if ($db_connected) {
+            mysqli_set_charset($conn, 'utf8mb4');
+        } else {
+            $GLOBALS['db_connection_error'] = mysqli_connect_error();
+            $conn = false;
+        }
+    } catch (Throwable $e) {
+        $db_connected = false;
+        $conn = false;
+        $GLOBALS['db_connection_error'] = $e->getMessage();
     }
+} else {
+    $conn = false;
 }
 
 if (!function_exists('hasDbConnection')) {

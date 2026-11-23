@@ -5,6 +5,14 @@ $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $parsedPath = parse_url($requestUri, PHP_URL_PATH);
 $path = trim($parsedPath, '/');
 
+// Parse query string into $_GET and $_REQUEST if not already populated
+$queryString = parse_url($requestUri, PHP_URL_QUERY);
+if (!empty($queryString)) {
+    parse_str($queryString, $queryParams);
+    $_GET = array_merge($_GET, $queryParams);
+    $_REQUEST = array_merge($_REQUEST, $queryParams);
+}
+
 // Base directory is the application root
 $baseDir = dirname(__DIR__);
 
