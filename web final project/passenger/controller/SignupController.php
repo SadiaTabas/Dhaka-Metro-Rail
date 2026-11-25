@@ -57,6 +57,14 @@ if (strlen($password) < 6) {
     exit();
 }
 
+if (!$conn) {
+    $_SESSION['signup_error'] = !empty($GLOBALS['db_connection_error'])
+        ? "Database unavailable: " . $GLOBALS['db_connection_error']
+        : "Database connection failed. Please verify database settings.";
+    header("Location: ../view/signup.php");
+    exit();
+}
+
 $name = explode(" ", $fullname, 2);
 $firstName = $name[0];
 $lastName  = $name[1] ?? "";
@@ -80,7 +88,9 @@ if ($result === "exists") {
     header("Location: ../../employee/View/php/login.php?msg=registered");
     exit();
 } else {
-    $_SESSION['signup_error'] = "Registration failed. Please check database connection.";
+    $_SESSION['signup_error'] = !empty($GLOBALS['db_connection_error'])
+        ? "Registration failed: " . $GLOBALS['db_connection_error']
+        : "Registration failed: Unable to verify account persistence in database.";
     header("Location: ../view/signup.php");
     exit();
 }

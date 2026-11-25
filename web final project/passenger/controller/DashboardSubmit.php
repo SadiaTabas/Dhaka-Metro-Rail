@@ -30,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     }
 
     if (!$conn) {
-        $_SESSION['error'] = "Database not connected. Please check configuration.";
+        $_SESSION['error'] = !empty($GLOBALS['db_connection_error'])
+            ? "Database unavailable: " . $GLOBALS['db_connection_error']
+            : "Database is temporarily unavailable. Please check configuration.";
         header("Location: $redirectPage");
         exit();
     }

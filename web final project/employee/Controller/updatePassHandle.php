@@ -36,7 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$conn) {
-        $_SESSION['error'] = "Database not connected. Please check configuration.";
+        $_SESSION['error'] = !empty($GLOBALS['db_connection_error'])
+            ? "Database unavailable: " . $GLOBALS['db_connection_error']
+            : "Database connection failed. Please check configuration.";
         header("Location: ../View/php/updatePass.php");
         exit();
     }

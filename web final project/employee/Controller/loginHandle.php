@@ -42,7 +42,9 @@ if ($userIdError || $passwordError) {
 }
 
 if (!$conn) {
-    $_SESSION['userIdError'] = "Database temporarily unavailable. Please verify connection.";
+    $_SESSION['userIdError'] = !empty($GLOBALS['db_connection_error'])
+        ? "Database unavailable: " . $GLOBALS['db_connection_error']
+        : "Database is temporarily unavailable. Please verify connection settings.";
     $_SESSION['userIdValue'] = $rawInput;
     header("Location: ../View/php/login.php");
     exit();
