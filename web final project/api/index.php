@@ -58,7 +58,11 @@ if (in_array($ext, $staticExts)) {
                 'eot'   => 'application/vnd.ms-fontobject',
             ];
             header('Content-Type: ' . ($mimeTypes[$ext] ?? 'application/octet-stream'));
-            header('Cache-Control: public, max-age=86400');
+            if ($ext === 'css' || $ext === 'js') {
+                header('Cache-Control: public, max-age=0, must-revalidate');
+            } else {
+                header('Cache-Control: public, max-age=86400');
+            }
             readfile($cand);
             exit();
         }

@@ -8,12 +8,20 @@ if (session_status() === PHP_SESSION_NONE) {
 include "../model/UserModel.php";
 
 $fullname = trim($_POST['fullname'] ?? '');
-$mobile   = trim($_POST['mobile'] ?? '');
+$rawMobile = trim($_POST['mobile'] ?? '');
 $nid      = trim($_POST['nid'] ?? '');
 $dob      = trim($_POST['dob'] ?? '');
 $gender   = trim($_POST['gender'] ?? '');
 $password = $_POST['password'] ?? '';
 $confirm  = $_POST['confirm_password'] ?? '';
+
+// Normalize mobile number
+$mobile = preg_replace('/[\s\-\(\)]+/', '', $rawMobile);
+if (strpos($mobile, '+88') === 0) {
+    $mobile = substr($mobile, 3);
+} elseif (strpos($mobile, '880') === 0) {
+    $mobile = substr($mobile, 2);
+}
 
 if (
     empty($fullname) || empty($mobile) || empty($nid) ||

@@ -7,15 +7,26 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once('../Model/db.php');
 
-$mobile   = trim($_POST['userid'] ?? '');
+$rawInput = trim($_POST['userid'] ?? '');
 $password = trim($_POST['password'] ?? '');
 
 $userIdError = $passwordError = "";
 
-if (empty($mobile)) {
-    $userIdError = "Mobile number is required.";
-} elseif (!preg_match('/^01[3-9]\d{8}$/', $mobile)) {
-    $userIdError = "Invalid mobile number format (01XXXXXXXXX).";
+// Normalize input: strip spaces, dashes, parentheses
+$cleanInput = preg_replace('/[\s\-\(\)]+/', '', $rawInput);
+if (strpos($cleanInput, '+88') === 0) {
+    $cleanInput = substr($cleanInput, 3);
+} elseif (strpos($cleanInput, '880') === 0) {
+    $cleanInput = substr($cleanInput, 2);
+}
+
+$isMobile = (bool)preg_match('/^01[3-9]\d{8}$/', $cleanInput);
+$isUserId = (bool)(is_numeric($cleanInput) && strlen($cleanInput) <= 8 && $cleanInput > 0);
+
+if (empty($rawInput)) {
+    $userIdError = "Registered mobile number or User ID is required.";
+} elseif (!$isMobile && !$isUserId) {
+    $userIdError = "Please enter a valid 11-digit mobile (01XXXXXXXXX) or numeric User ID.";
 }
 
 if (empty($password)) {
@@ -25,24 +36,34 @@ if (empty($password)) {
 if ($userIdError || $passwordError) {
     $_SESSION['userIdError'] = $userIdError;
     $_SESSION['passwordError'] = $passwordError;
-    $_SESSION['userIdValue'] = $mobile;
+    $_SESSION['userIdValue'] = $rawInput;
     header("Location: ../View/php/login.php");
     exit();
 }
 
 if (!$conn) {
-    $_SESSION['userIdError'] = "Database not connected. Please verify database settings.";
+    $_SESSION['userIdError'] = "Database temporarily unavailable. Please verify connection.";
+    $_SESSION['userIdValue'] = $rawInput;
     header("Location: ../View/php/login.php");
     exit();
 }
 
-$stmt = $conn->prepare("SELECT UserID, RoleID, FirstName, LastName, Mobile, Password, Status FROM users WHERE Mobile = ?");
-$stmt->bind_param("s", $mobile);
+// Query user by Mobile or UserID
+if ($isMobile) {
+    $stmt = $conn->prepare("SELECT UserID, RoleID, FirstName, LastName, Mobile, Password, Status FROM users WHERE Mobile = ?");
+    $stmt->bind_param("s", $cleanInput);
+} else {
+    $uid = (int)$cleanInput;
+    $stmt = $conn->prepare("SELECT UserID, RoleID, FirstName, LastName, Mobile, Password, Status FROM users WHERE UserID = ?");
+    $stmt->bind_param("i", $uid);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 
-if ($result->num_rows !== 1) {
-    $_SESSION['userIdError'] = "Mobile number not found.";
+if (!$result || $result->num_rows !== 1) {
+    $_SESSION['userIdError'] = "User not found in database. Please check your credentials or create an account.";
+    $_SESSION['userIdValue'] = $rawInput;
     header("Location: ../View/php/login.php");
     exit();
 }
@@ -51,7 +72,7 @@ $user = $result->fetch_assoc();
 $stmt->close();
 
 if ($user['Status'] === 'Blocked') {
-    $_SESSION['userIdError'] = "Your account has been blocked. Please contact support.";
+    $_SESSION['userIdError'] = "Your account has been blocked. Please contact Dhaka Metro Rail administration.";
     header("Location: ../View/php/login.php");
     exit();
 }
@@ -60,8 +81,8 @@ if ($user['Status'] === 'Blocked') {
 $passwordValid = password_verify($password, $user['Password']) || ($password === $user['Password']);
 
 if (!$passwordValid) {
-    $_SESSION['passwordError'] = "Incorrect password.";
-    $_SESSION['userIdValue'] = $mobile;
+    $_SESSION['passwordError'] = "Incorrect password. Please verify and try again.";
+    $_SESSION['userIdValue'] = $rawInput;
     header("Location: ../View/php/login.php");
     exit();
 }
@@ -77,14 +98,16 @@ if ($password === $user['Password'] && !password_verify($password, $user['Passwo
     }
 }
 
-// Set session
+// Regenerate session ID on successful login to prevent session fixation attacks
+session_regenerate_id(true);
+
 $_SESSION['logged_in'] = true;
 $_SESSION['UserID']    = (int)$user['UserID'];
 $_SESSION['Mobile']    = $user['Mobile'];
 $_SESSION['RoleID']    = (int)$user['RoleID'];
 $_SESSION['UserName']  = trim($user['FirstName'] . ' ' . $user['LastName']);
 
-// Role-based redirect
+// Role-based redirect to respective dashboard
 if ($user['RoleID'] == 1) {
     header("Location: ../../admin/view/admindashboard.php");
 } elseif ($user['RoleID'] == 2) {

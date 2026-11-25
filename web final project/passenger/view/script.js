@@ -1,6 +1,9 @@
 function validateForm() {
     let fullname = document.getElementById("fullname").value.trim();
-    let mobile = document.getElementById("mobile").value.trim();
+    let rawMobile = document.getElementById("mobile").value.trim();
+    let mobile = rawMobile.replace(/[\s\-\(\)]+/g, '');
+    if (mobile.indexOf("+88") === 0) mobile = mobile.substring(3);
+    else if (mobile.indexOf("880") === 0) mobile = mobile.substring(2);
     let nid = document.getElementById("nid").value.trim();
     let dob = document.getElementById("dob").value.trim();
     let gender = document.getElementById("gender").value.trim();

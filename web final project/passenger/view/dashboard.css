@@ -223,21 +223,25 @@ body {
 .image-side {
     flex: 1.2;
     position: relative;
-    background: linear-gradient(180deg, #e1f4fb 0%, #f4f9fb 100%);
+    background: linear-gradient(135deg, #e6f6ee 0%, #f0fdf4 50%, #e0f2fe 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 16px;
+    padding: 24px;
+    border-left: 1px solid var(--border-color);
 }
 
 .image-side img {
     width: 100%;
+    max-width: 100%;
     height: auto;
-    max-height: 100%;
+    max-height: 380px;
     object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 106, 78, 0.1);
+    object-position: center;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 106, 78, 0.12);
+    display: block;
 }
 
 .train-badge {
@@ -506,6 +510,12 @@ body {
     }
     .image-side {
         min-height: 220px;
+        padding: 20px;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+    }
+    .image-side img {
+        max-height: 260px;
     }
     .form-side {
         padding: 25px 20px;

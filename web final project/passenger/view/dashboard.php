@@ -22,8 +22,8 @@ $isRootRequest = ($reqPath === '/' || $reqPath === '/index.php' || empty(trim($r
 
 $formAction   = $isRootRequest ? 'passenger/controller/SaveJourneyTemp.php' : '../controller/SaveJourneyTemp.php';
 $imgSrc       = $isRootRequest ? 'passenger/view/dashboard1.jpg' : 'dashboard1.jpg';
-$jsSrc        = $isRootRequest ? 'passenger/view/dashboard.js' : 'dashboard.js';
-$cssSrc       = $isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css';
+$jsSrc        = ($isRootRequest ? 'passenger/view/dashboard.js' : 'dashboard.js') . '?v=20261125';
+$cssSrc       = ($isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css') . '?v=20261125';
 
 $stations = [
     "Uttara North", "Uttara Center", "Uttara South", "Pallabi",

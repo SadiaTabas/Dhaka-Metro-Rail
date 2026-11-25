@@ -13,6 +13,17 @@ if (!isset($_SESSION['UserID'])) {
     exit();
 }
 
+// Ensure non-passenger roles are routed to their respective dashboards
+if (isset($_SESSION['RoleID']) && (int)$_SESSION['RoleID'] !== 3) {
+    if ((int)$_SESSION['RoleID'] === 1) {
+        header("Location: ../../admin/view/admindashboard.php");
+        exit();
+    } elseif ((int)$_SESSION['RoleID'] === 2) {
+        header("Location: ../../employee/View/php/employeDashboard.php");
+        exit();
+    }
+}
+
 $userid = (int)$_SESSION['UserID'];
 
 $from = $to = $date = '';
@@ -57,7 +68,7 @@ $stations = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Passenger Dashboard - Dhaka Metro Rail</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="dashboard.css?v=20261125">
 </head>
 <body>
 

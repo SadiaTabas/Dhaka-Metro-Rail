@@ -6,7 +6,7 @@ $homeLink     = $isRootRequest ? '/' : 'dashboard.php';
 $registerLink = $isRootRequest ? 'passenger/view/signup.php' : 'signup.php';
 $loginLink    = $isRootRequest ? 'employee/View/php/login.php' : '../../employee/View/php/login.php';
 $logoSrc      = $isRootRequest ? 'passenger/view/signuplogo.png' : 'signuplogo.png';
-$cssPath      = $isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css';
+$cssPath      = ($isRootRequest ? 'passenger/view/dashboard.css' : 'dashboard.css') . '?v=20261125';
 ?>
 <link rel="stylesheet" href="<?php echo $cssPath; ?>">
 <header class="header">

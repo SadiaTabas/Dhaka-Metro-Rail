@@ -127,7 +127,10 @@ if (!defined('METRO_DB_INIT')) {
         public function __construct(string $dbPath) {
             $this->pdo = new PDO("sqlite:$dbPath");
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->pdo->exec("PRAGMA journal_mode = WAL;");
+            try {
+                $this->pdo->exec("PRAGMA journal_mode = DELETE;");
+                $this->pdo->exec("PRAGMA synchronous = NORMAL;");
+            } catch (Throwable $e) {}
             $this->initSchema();
         }
 
@@ -308,9 +311,6 @@ if (!defined('METRO_DB_INIT')) {
         }
     }
 
-    // Suppress unhandled exceptions
-    mysqli_report(MYSQLI_REPORT_OFF);
-
     $servername = getenv('DB_HOST') ?: getenv('MYSQL_HOST') ?: '127.0.0.1';
     $username   = getenv('DB_USER') ?: getenv('MYSQL_USER') ?: 'root';
     $password   = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : (getenv('MYSQL_PASSWORD') !== false ? getenv('MYSQL_PASSWORD') : '');
@@ -326,25 +326,31 @@ if (!defined('METRO_DB_INIT')) {
         if (!empty($parsed['port'])) $port       = (int)$parsed['port'];
     }
 
-    $conn = @mysqli_init();
+    $conn = false;
     $db_connected = false;
 
-    if ($conn) {
-        if (getenv('MYSQL_SSL') === 'true' || getenv('DB_SSL') === 'true') {
-            mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
-        }
-        mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 2);
+    // Check if mysqli extension is available
+    if (extension_loaded('mysqli')) {
+        mysqli_report(MYSQLI_REPORT_OFF);
+        $conn = @mysqli_init();
 
-        try {
-            $db_connected = @mysqli_real_connect($conn, $servername, $username, $password, $database, $port);
-            if ($db_connected) {
-                mysqli_set_charset($conn, 'utf8mb4');
-                $GLOBALS['db_driver'] = 'mysql';
-            } else {
+        if ($conn) {
+            if (getenv('MYSQL_SSL') === 'true' || getenv('DB_SSL') === 'true') {
+                mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+            }
+            mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 2);
+
+            try {
+                $db_connected = @mysqli_real_connect($conn, $servername, $username, $password, $database, $port);
+                if ($db_connected) {
+                    mysqli_set_charset($conn, 'utf8mb4');
+                    $GLOBALS['db_driver'] = 'mysql';
+                } else {
+                    $conn = false;
+                }
+            } catch (Throwable $e) {
                 $conn = false;
             }
-        } catch (Throwable $e) {
-            $conn = false;
         }
     }
 
@@ -352,6 +358,11 @@ if (!defined('METRO_DB_INIT')) {
     if (!$db_connected || !$conn) {
         try {
             $sqlitePath = sys_get_temp_dir() . '/dhaka_metro_db.sqlite';
+            // If bundled template exists and /tmp db does not, pre-copy for instant seeding
+            $bundledDb = __DIR__ . '/../../database.sqlite';
+            if (!file_exists($sqlitePath) && file_exists($bundledDb)) {
+                @copy($bundledDb, $sqlitePath);
+            }
             $conn = new MetroSqliteConn($sqlitePath);
             $db_connected = true;
             $GLOBALS['db_driver'] = 'sqlite';

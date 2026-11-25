@@ -13,6 +13,16 @@ if (!isset($_SESSION['UserID'])) {
     exit();
 }
 
+if (isset($_SESSION['RoleID']) && (int)$_SESSION['RoleID'] !== 3) {
+    if ((int)$_SESSION['RoleID'] === 1) {
+        header("Location: ../../admin/view/admindashboard.php");
+        exit();
+    } elseif ((int)$_SESSION['RoleID'] === 2) {
+        header("Location: ../../employee/View/php/employeDashboard.php");
+        exit();
+    }
+}
+
 $userID = (int)$_SESSION['UserID'];
 if (!isset($_GET['route_id'])) {
     header("Location: dashboard_after_login.php");
